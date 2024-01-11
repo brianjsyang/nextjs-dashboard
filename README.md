@@ -10,3 +10,5 @@ For more information, see the [course curriculum](https://nextjs.org/learn) on t
 - /app/ui: Contains all the UI components for your application, such as cards, tables, and forms.
 - /public: Contains all the static assets for your application, such as images
 - /scripts: Contains a seeding script that will be used to populate the database (not real world scenario)
+
+### Testing Vercel Deployment!
