@@ -1,3 +1,12 @@
+/**
+ * Next.js applications use React Server Components. Fetching data with Server component is relatively new.
+ * - Server Component supports "promises", providing a simpler solution for asynchronous tasks like data fetching.
+ * - Use asyc/await syntax without reaching out for useEffect, useState, or data fetching libraries.
+ * 
+ * - Server Component executes on the server, so it is possible to keep expensive data fetches and logic on the server and only send the result to client.
+ * - Query directly without an additional API layer.
+ */
+
 import { sql } from '@vercel/postgres';
 import {
   CustomerField,
@@ -9,21 +18,24 @@ import {
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
+import { unstable_noStore as noStore } from 'next/cache'; // unstabe_noStore is an experimental API and may change in the future. Stable option is the Segment Config Option: export const dynamic = "force-dynamic"
+
 
 export async function fetchRevenue() {
-  // Add noStore() here to prevent the response from being cached.
+  // Add noStore() here to prevent the response from being cached. Making it dynamic!
   // This is equivalent to in fetch(..., {cache: 'no-store'}).
+  noStore();
 
   try {
     // Artificially delay a response for demo purposes.
     // Don't do this in production :)
+    console.log('Fetching revenue data...');
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
-    // console.log('Fetching revenue data...');
-    // await new Promise((resolve) => setTimeout(resolve, 3000));
 
     const data = await sql<Revenue>`SELECT * FROM revenue`;
 
-    // console.log('Data fetch completed after 3 seconds.');
+    console.log('Data fetch completed after 3 seconds.');
 
     return data.rows;
   } catch (error) {
@@ -53,6 +65,8 @@ export async function fetchLatestInvoices() {
 }
 
 export async function fetchCardData() {
+  noStore();
+
   try {
     // You can probably combine these into a single SQL query
     // However, we are intentionally splitting them to demonstrate
@@ -64,6 +78,13 @@ export async function fetchCardData() {
          SUM(CASE WHEN status = 'pending' THEN amount ELSE 0 END) AS "pending"
          FROM invoices`;
 
+    /**
+     * initializing multiple querys in parallel using Promise.all()!
+     * By using this feature,
+     * 1. Start executing all data fetching at the same time, for performance gains!
+     * 2. Use native JavaScript pattern that can be applied to any library or framework.
+     * .... What if one data request is SLOWER than all the others?
+     */
     const data = await Promise.all([
       invoiceCountPromise,
       customerCountPromise,
@@ -92,6 +113,7 @@ export async function fetchFilteredInvoices(
   query: string,
   currentPage: number,
 ) {
+  noStore();
   const offset = (currentPage - 1) * ITEMS_PER_PAGE;
 
   try {
@@ -123,7 +145,10 @@ export async function fetchFilteredInvoices(
   }
 }
 
+
 export async function fetchInvoicesPages(query: string) {
+  noStore();
+
   try {
     const count = await sql`SELECT COUNT(*)
     FROM invoices
@@ -145,6 +170,8 @@ export async function fetchInvoicesPages(query: string) {
 }
 
 export async function fetchInvoiceById(id: string) {
+  noStore();
+
   try {
     const data = await sql<InvoiceForm>`
       SELECT
@@ -169,6 +196,7 @@ export async function fetchInvoiceById(id: string) {
   }
 }
 
+
 export async function fetchCustomers() {
   try {
     const data = await sql<CustomerField>`
@@ -188,6 +216,8 @@ export async function fetchCustomers() {
 }
 
 export async function fetchFilteredCustomers(query: string) {
+  noStore();
+
   try {
     const data = await sql<CustomersTableType>`
 		SELECT
