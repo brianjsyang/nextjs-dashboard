@@ -16,7 +16,11 @@ const FormSchema = z.object({
 const CreateInvoice = FormSchema.omit({ id: true, date: true});
 const UpdateInvoice = FormSchema.omit({ id: true, date: true});
 
-// create a new async function taht accepts "formData".
+/**
+ * Create invoice and insert to database
+ * @param formData  Data object that holds user input data from the form ... also validated by Zod.
+ * @returns On submition, return user to invoice list.
+ */
 export async function createInvoice(formData: FormData) {
     // pass rawFormData to CreateInvoice to validate the types.
     const { customerId, amount, status } = CreateInvoice.parse({
@@ -30,12 +34,17 @@ export async function createInvoice(formData: FormData) {
     const amountInCents = amount * 100; // Usually good practice to store monetary values in cents to eliminate JavaScript floating-point errors and greater accuracy.
     const date = new Date().toISOString().split('T')[0];    // YYYY-MM-DD
 
-    // INSERT TO DB!
-    await sql `
-        INSERT INTO invoices (customerId, amount, status, date)
-        VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
-    `;
-
+    try {
+        await sql `
+            INSERT INTO invoices (customerId, amount, status, date)
+            VALUES (${customerId}, ${amountInCents}, ${status}, ${date})
+        `;
+    } catch (error) {
+        return {
+            message: 'Database Error: Failed to Create Invoice.',
+        }
+    }
+    
     // Since the data displayed will be updated, cache must be cleared to trigger new request to the server.
     revalidatePath('/dashboard/invocies');
 
@@ -44,7 +53,11 @@ export async function createInvoice(formData: FormData) {
 }
 
 
-
+/**
+ * Edit existing invoice
+ * @param id        UUID of the invoice to edit.
+ * @param formData  Data object that holds user input data from the form ... also validated by Zod.
+ */
 export async function updateInvoice(id: string, formData: FormData) {
     // pass rawFormData to UpdateInvoice to validate the types.
     const { customerId, amount, status } = UpdateInvoice.parse({
@@ -56,12 +69,22 @@ export async function updateInvoice(id: string, formData: FormData) {
 
     const amountInCents = amount * 100;
 
-    await sql`
-        UPDATE invoices
-        SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
-        WHERE id = ${id}
-    `;
-
+    try {
+        await sql`
+            UPDATE invoices
+            SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+            WHERE id = ${id}
+        `;
+    } catch (error) {
+        return { message: `Database Error: Failed to Update Invoice with UUID: ${id}, CustomerID: ${customerId}`}
+    }
+ 
+    /**
+     * Note how redirect is being called outside the try/catch block.
+     * - Redirect works by throwing an error, which would be caught by the catch block.
+     * - To avoid that, call redirect AFTER try/catch block.
+     * - Redirect is only reachable if try is successful.
+     */
     revalidatePath('/dashboard/invocies');
     redirect('/dashboard/invoices');
 }
@@ -69,9 +92,14 @@ export async function updateInvoice(id: string, formData: FormData) {
 
 
 export async function deleteInvoice(id: string) {
-    await sql`
-        DELETE FROM invoices WHERE id = ${id}
-    `;
-    
-    revalidatePath('/dashboard/invocies');
+    throw new Error('Failed to Delete Invoice...test')
+
+    try {
+        await sql`
+            DELETE FROM invoices WHERE id = ${id}
+        `;
+        revalidatePath('/dashboard/invocies');
+    } catch (error) {
+        return { message: `Database Error: Failed to Delete Invoice with UUID: ${id}`}
+    }
 }
