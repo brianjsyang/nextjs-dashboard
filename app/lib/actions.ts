@@ -7,30 +7,53 @@ import { redirect } from "next/navigation";
 
 const FormSchema = z.object({
     id: z.string(),
-    customerId: z.string(),
-    amount: z.coerce.number(),  // Amount is set to coerce(change) from a string to a number, while also validating its type.
-    status: z.enum(['pending', 'paid']),
+    customerId: z.string({ invalid_type_error: 'Please select a customer.'}),
+    amount: z.coerce
+        .number()  // Amount is set to coerce(change) from a string to a number, while also validating its type.
+        .gt(0, { message: 'Please enter an amout greater than $0.' }), // gt ... greater than
+    status: z.enum(['pending', 'paid'], { invalid_type_error: 'Pleae select an invoice status' }),
     date: z.string()
 });
 
 const CreateInvoice = FormSchema.omit({ id: true, date: true});
 const UpdateInvoice = FormSchema.omit({ id: true, date: true});
 
+
+// This is temporary until @types/react-dom is updated
+export type State = {
+    errors?: {
+      customerId?: string[];
+      amount?: string[];
+      status?: string[];
+    };
+    message?: string | null;
+};
+
 /**
  * Create invoice and insert to database
+ * @param prevState Contains the state passed from the useFormState hook (from create-form.tsx).
  * @param formData  Data object that holds user input data from the form ... also validated by Zod.
  * @returns On submition, return user to invoice list.
  */
-export async function createInvoice(formData: FormData) {
-    // pass rawFormData to CreateInvoice to validate the types.
-    const { customerId, amount, status } = CreateInvoice.parse({
-        // Extract the values of formData using get() ... other method when there are many entries, const rawFormData = Object.fromEntries(formData.entries())
-        customerId: formData.get('customerId'),
+export async function createInvoice(prevState: State ,formData: FormData) {
+
+    const validatedFields = CreateInvoice.safeParse({
+        // safeParse() returns an object containing either "success" or "error". Help validate more gracefully.
+        customerId: formData.get('customerId'),  // Extract the values of formData using get() ... other method when there are many entries, const rawFormData = Object.fromEntries(formData.entries())
         amount: formData.get('amount'),
         status: formData.get('status'),
     });
 
+    // If form validation fails, return errors early. Otherwise, continue.
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Invoice.',
+        };
+    }
+
     // Some clean up for the data.
+    const { customerId, amount, status } = validatedFields.data;
     const amountInCents = amount * 100; // Usually good practice to store monetary values in cents to eliminate JavaScript floating-point errors and greater accuracy.
     const date = new Date().toISOString().split('T')[0];    // YYYY-MM-DD
 
@@ -56,17 +79,26 @@ export async function createInvoice(formData: FormData) {
 /**
  * Edit existing invoice
  * @param id        UUID of the invoice to edit.
+ * @param prevState Contains the state passed from the useFormState hook (from create-form.tsx).
  * @param formData  Data object that holds user input data from the form ... also validated by Zod.
  */
-export async function updateInvoice(id: string, formData: FormData) {
-    // pass rawFormData to UpdateInvoice to validate the types.
-    const { customerId, amount, status } = UpdateInvoice.parse({
-        // Extract the values of formData using get() ... other method when there are many entries, const rawFormData = Object.fromEntries(formData.entries())
-        customerId: formData.get('customerId'),
+export async function updateInvoice(id: string, prevState: State, formData: FormData) {
+
+    const validatedFields = UpdateInvoice.safeParse({
+        // safeParse() returns an object containing either "success" or "error". Help validate more gracefully.
+        customerId: formData.get('customerId'),  // Extract the values of formData using get() ... other method when there are many entries, const rawFormData = Object.fromEntries(formData.entries())
         amount: formData.get('amount'),
         status: formData.get('status'),
     });
 
+    if (!validatedFields.success) {
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Invoice.',
+        };
+    }
+
+    const { customerId, amount, status } = validatedFields.data;
     const amountInCents = amount * 100;
 
     try {
