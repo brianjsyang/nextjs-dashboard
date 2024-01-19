@@ -12,3 +12,5 @@ For more information, see the [course curriculum](https://nextjs.org/learn) on t
 - /scripts: Contains a seeding script that will be used to populate the database (not real world scenario)
 
 ### Testing Vercel Deployment!
+Email: user@nextmail.com
+Password: 123456
