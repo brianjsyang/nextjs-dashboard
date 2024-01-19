@@ -29,6 +29,7 @@ export const authConfig = {
  * - Adding "signIn" redirects users to custom login page, rather than the NextAuth.js default.
  * 
  * callbacks - Protect the app's routes with Next.js Middleware
+ * - Prevent unauthorized user access to dashboard.
  * - "authorized" callback to verify if the request is authorized to access a page via Next.js Middleware.
  * - Called before a request is completed, receives an object with the "auth" and "request" properties.
  * 

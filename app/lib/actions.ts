@@ -5,6 +5,10 @@ import { sql } from "@vercel/postgres"; // SQL query to insert to DB.
 import { revalidatePath } from "next/cache"; // clear cache
 import { redirect } from "next/navigation";
 
+// import for auth logic
+import { signIn } from '@/auth';
+import { AuthError } from "next-auth";
+
 const FormSchema = z.object({
     id: z.string(),
     customerId: z.string({ invalid_type_error: 'Please select a customer.'}),
@@ -135,3 +139,27 @@ export async function deleteInvoice(id: string) {
         return { message: `Database Error: Failed to Delete Invoice with UUID: ${id}`}
     }
 }
+
+
+/**
+ * Connect the auth logic with the login form.
+ * @param formData  User input of the login form.
+ */
+export async function authenticate(
+    prevState: string | undefined,
+    formData: FormData,
+  ) {
+    try {
+      await signIn('credentials', formData);
+    } catch (error) {
+      if (error instanceof AuthError) {
+        switch (error.type) {
+          case 'CredentialsSignin':
+            return 'Invalid credentials.';
+          default:
+            return 'Something went wrong.';
+        }
+      }
+      throw error;
+    }
+  }
