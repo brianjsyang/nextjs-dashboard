@@ -1,6 +1,12 @@
 import Form from "@/app/ui/invoices/create-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { fetchCustomers } from "@/app/lib/data";
+import { Metadata } from 'next';
+ 
+// Metadata of child will override the parent metadata - this allows custom metadata for each page!
+export const metadata: Metadata = {
+  title: 'Create New Invoice',    // because of the title template in the layout.tsx, the Metatitle of this page will be "Invoices | Acme Dashboard"
+};
 
 export default async function Page() {
     const customers = await fetchCustomers();

@@ -2,7 +2,12 @@ import Form from "@/app/ui/invoices/edit-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
 import { fetchInvoiceById ,fetchCustomers } from "@/app/lib/data";
 import { notFound } from "next/navigation";
-
+import { Metadata } from 'next';
+ 
+// Metadata of child will override the parent metadata - this allows custom metadata for each page!
+export const metadata: Metadata = {
+    title: `Editing Invoice`,    // because of the title template in the layout.tsx, the Metatitle of this page will be "Invoices | Acme Dashboard"
+};
 
 export default async function Page({ params }: { params: { id: string }}) { 
     // allow the <Page> component to accept params prop

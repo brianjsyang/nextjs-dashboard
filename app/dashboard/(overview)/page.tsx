@@ -5,6 +5,12 @@ import { lusitana } from "@/app/ui/fonts";
 import { fetchCardData } from "@/app/lib/data";
 import { Suspense } from "react";
 import { RevenueChartSkeleton, LatestInvoicesSkeleton, CardSkeleton } from "@/app/ui/skeletons";
+import { Metadata } from 'next';
+ 
+// Metadata of child will override the parent metadata - this allows custom metadata for each page!
+export const metadata: Metadata = {
+  title: 'Dashboard',    // because of the title template in the layout.tsx, the Metatitle of this page will be "Invoices | Acme Dashboard"
+};
 
 export default async function Page() {
     const {

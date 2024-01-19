@@ -1,5 +1,11 @@
 import AcmeLogo from '@/app/ui/acme-logo';
 import LoginForm from '@/app/ui/login-form';
+import { Metadata } from 'next';
+ 
+// Metadata of child will override the parent metadata - this allows custom metadata for each page!
+export const metadata: Metadata = {
+  title: 'Login',    // because of the title template in the layout.tsx, the Metatitle of this page will be "Invoices | Acme Dashboard"
+};
  
 export default function LoginPage() {
   return (
