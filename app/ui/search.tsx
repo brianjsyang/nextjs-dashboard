@@ -39,7 +39,7 @@ export default function Search({ placeholder }: { placeholder: string }) {
 
   return (
     <div className="relative flex flex-1 flex-shrink-0">
-      <label htmlFor="search" className="sr-only">
+      <label htmlFor="search_item" className="sr-only">
         Search
       </label>
       <input
@@ -47,6 +47,8 @@ export default function Search({ placeholder }: { placeholder: string }) {
         placeholder={placeholder}
         onChange={(e) => {handleSearch(e.target.value)}}
         defaultValue={serachParams.get('query')?.toString()} // keeping the value of URL params the same as input field.
+        aria-label='search_item'
+        id='search_item'
       />
       <MagnifyingGlassIcon className="absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
     </div>
